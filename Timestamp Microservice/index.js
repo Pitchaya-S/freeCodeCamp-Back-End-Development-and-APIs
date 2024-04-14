@@ -23,24 +23,27 @@ app.get("/api/hello", function (req, res) {
   res.json({ greeting: "hello API" });
 });
 
-api.get("/api", (req, res) => {
-  let currentUnix = new Date().getTime();
-  let currentUtc = new Date().toUTCString();
-  res.json({ unix: currentUnix, utc: currentUtc });
-});
-
-api.get("/api/:date", (req, res) => {
+app.get("/api/:date?", (req, res) => {
   let date = req.params.date;
-  if (/\d{5,}/.test(date)) {
-    date = parseInt(date);
-    req.json({ unix: date, utc: new Date(date).toUTCString() });
+  let isValidDate = Date.parse(date);
+  let isValidUnix = /^[0-9]+$/.test(date);
+  let isEmpty = date == "" || date == null;
+  let unix_output = 0;
+  let utc_output = "";
+  if (isValidDate) {
+    unix_output = new Date(date);
+    utc_output = unix_output.toUTCString();
+    return res.json({ unix: unix_output.valueOf(), utc: utc_output });
+  } else if (isNaN(isValidDate) && isValidUnix) {
+    unix_output = new Date(parseInt(date));
+    utc_output = unix_output.toUTCString();
+    return res.json({ unix: unix_output.valueOf(), utc: utc_output });
+  } else if (isEmpty) {
+    unix_output = new Date();
+    utc_output = unix_output.toUTCString();
+    return res.json({ unix: unix_output.valueOf(), utc: utc_output });
   } else {
-    let newDate = new Date(date);
-    if (newDate.toString() === "Invalid Date") {
-      res.json({ error: newDate.toString() });
-    } else {
-      res.json({ unix: newDate.valueOf(), utc: newDate.toUTCString() });
-    }
+    res.json({ error: "Invalid Date" });
   }
 });
 
